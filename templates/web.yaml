@@ -1,0 +1,119 @@
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: discourse
+  annotations:
+    description: Defines how to deploy Discourse all in one
+spec:
+  strategy:
+    type: Rolling
+  replicas: 1
+  selector:
+    name: discourse
+  triggers:
+  - type: ImageChange
+    imageChangeParams:
+      automatic: true
+      containerNames:
+      - discourse
+      from:
+        kind: ImageStreamTag
+        name: "discourse:latest"
+  - type: ConfigChange
+  template:
+    metadata:
+      name: "discourse"
+      labels:
+        name: "discourse"
+    spec:
+      initContainers:
+      - name: cp
+        image: "image-registry.openshift-image-registry.svc:5000/central-ci/discourse"
+        env:
+          - name: RAILS_ENV
+            value: "production"
+          - name: DISCOURSE_DB_SOCKET
+            value: ''
+          - name: DISCOURSE_DB_PORT
+            value: '5432'
+          - name: DISCOURSE_DB_NAME
+            value: 'discourse'
+          - name: DISCOURSE_DB_PASSWORD
+            value: 'postgres'
+          - name: DISCOURSE_DB_USERNAME
+            value: 'postgres'
+          - name: DISCOURSE_DB_HOST
+            value: "discourse-postgresql-ha-pgpool.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_HOST
+            value: "discourse-redis-ha-haproxy.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_PORT
+            value: "6379"
+        command: ["/bin/sh", "/scripts/init.sh"]
+        args:
+          - -f /var/www/discourse/
+          - -t /var/www/discourse.tmp
+          - -u abraverm@redhat.com
+          - -p redhatredhat
+        volumeMounts:
+          - name: discourse
+            mountPath: /var/www/discourse.tmp
+          - name: scripts
+            mountPath: /scripts
+      containers:
+      - name: discourse
+        image: " "
+        command: ["/var/www/discourse/bin/unicorn"]
+        env:
+          - name: RAILS_ENV
+            value: "production"
+          - name: UNICORN_WORKERS
+            value: "3"
+          - name: UNICORN_SIDEKIQS
+            value: "1"
+          - name: RUBY_GLOBAL_METHOD_CACHE_SIZE
+            value: "131072"
+          - name: RUBY_GC_HEAP_GROWTH_MAX_SLOTS
+            value: "40000"
+          - name: RUBY_GC_HEAP_INIT_SLOTS
+            value: "400000"
+          - name: RUBY_GC_HEAP_OLDOBJECT_LIMIT_FACTOR
+            value: "1.5"
+          - name: DISCOURSE_DB_SOCKET
+            value: ''
+          - name: DISCOURSE_DB_PORT
+            value: '5432'
+          - name: DISCOURSE_DB_NAME
+            value: 'discourse'
+          - name: DISCOURSE_DB_PASSWORD
+            value: 'postgres'
+          - name: DISCOURSE_DB_USERNAME
+            value: 'postgres'
+          - name: DISCOURSE_DB_HOST
+            value: "discourse-postgresql-ha-pgpool.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_HOST
+            value: "discourse-redis-ha-haproxy.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_PORT
+            value: "6379"
+          - name: DISCOURSE_DEVELOPER_EMAILS
+            value: "abraverm@redhat.com"
+          - name: DISCOURSE_HOSTNAME
+            value: "discourse-central-ci.apps.ocp.prod.psi.redhat.com"
+          - name: DISCOURSE_SMTP_ADDRESS
+            value: "smtp.example.com"
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            memory: "2048Mi"
+        volumeMounts:
+          - mountPath: "/var/www/discourse"
+            name: discourse
+      volumes:
+        - name: discourse
+          emptyDir: {}
+        - name: scripts
+          configMap:
+            name: discourse
+

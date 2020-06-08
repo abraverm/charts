@@ -1,0 +1,10 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  name: "discourse"
+spec:
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: discourse

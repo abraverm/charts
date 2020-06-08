@@ -1,0 +1,13 @@
+---
+securityContext:
+  runAsUser: 1001920000
+  fsGroup: 1001920000
+haproxy:
+  enabled: true
+  securityContext:
+    runAsUser: 1001920000
+    fsGroup: 1001920000
+  serviceAccount:
+    create: true
+  metrics:
+    enabled: true

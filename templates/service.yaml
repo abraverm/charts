@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: discourse
+  annotations:
+    description: Exposes and load balances the application pods
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    name: discourse
+

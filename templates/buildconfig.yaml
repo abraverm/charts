@@ -1,0 +1,23 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: discourse
+spec:
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM discourse/base:release
+      USER 1000
+      EXPOSE 8080
+      WORKDIR /var/www/discourse
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  output:
+    to:
+      kind: "ImageStreamTag"
+      name: "discourse:latest"
+  triggers:
+  - type: ImageChange
+  - type: ConfigChange

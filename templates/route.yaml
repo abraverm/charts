@@ -1,0 +1,9 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: discourse
+spec:
+  host: 
+  to:
+    kind: Service
+    name: discourse

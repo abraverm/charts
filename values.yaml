@@ -1,0 +1,33 @@
+---
+redis-ha:
+  securityContext:
+    runAsUser: 1001920000
+    fsGroup: 1001920000
+  haproxy:
+    enabled: true
+    securityContext:
+      runAsUser: 1001920000
+      fsGroup: 1001920000
+postgresql-ha:
+  postgresqlImage:
+    debug: true
+  postgresql:
+    database: discourse
+    password: postgres
+    postgresPassword: postgres
+    repmgrPassword: repmgr
+    securityContext:
+      enabled: true
+      runAsUser: 1001920000
+      fsGroup: 1001920000
+  pgpoolImage:
+    debug: true
+  pgpool:
+    securityContext:
+      enabled: true
+      runAsUser: 1001920000
+      fsGroup: 1001920000
+  metricsImage:
+    securityContext:
+      enabled: true
+      runAsUser: 1001920000
