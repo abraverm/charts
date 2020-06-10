@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: discourse-init
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: init
+        image: abraverm/discourse
+#        image: "image-registry.openshift-image-registry.svc:5000/central-ci/discourse"
+        env:
+          - name: RAILS_ENV
+            value: "production"
+          - name: DISCOURSE_DB_SOCKET
+            value: ''
+          - name: DISCOURSE_DB_PORT
+            value: '5432'
+          - name: DISCOURSE_DB_NAME
+            value: 'discourse'
+          - name: DISCOURSE_DB_PASSWORD
+            value: 'postgres'
+          - name: DISCOURSE_DB_USERNAME
+            value: 'postgres'
+          - name: DISCOURSE_DB_HOST
+            value: "discourse-postgresql-ha-pgpool.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_HOST
+            value: "discourse-redis-ha-haproxy.central-ci.svc.cluster.local"
+          - name: DISCOURSE_REDIS_PORT
+            value: "6379"
+        command: ["/bin/bash", "/scripts/storage_init.sh", "-f", "/var/www/discourse/", "-t", "/var/www/discourse.tmp"]
+        volumeMounts:
+          - name: discourse
+            mountPath: /var/www/discourse.tmp
+          - name: scripts
+            mountPath: /scripts
+        resources:
+          limits:
+            cpu: 4
+            memory: 4Gi
+      volumes:
+        - name: discourse
+#          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: discourse
+        - name: scripts
+          configMap:
+            name: discourse

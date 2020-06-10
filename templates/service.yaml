@@ -5,10 +5,15 @@ metadata:
   annotations:
     description: Exposes and load balances the application pods
 spec:
+  type: LoadBalancer
+  selector:
+    app: discourse
   ports:
   - name: http
-    port: 8080
+    port: 80
     targetPort: 8080
-  selector:
-    name: discourse
-
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8080
+    protocol: TCP

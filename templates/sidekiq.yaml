@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidekiq
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sidekiq
+  template:
+    metadata:
+      labels:
+        app: sidekiq
+    spec:
+      containers:
+      - name: sidekiq
+        image: abraverm/discourse
+        command: ["bundle", "exec", "sidekiq"]
+        env:
+        - name: RAILS_ENV
+          value: "production"
+        - name: DISCOURSE_REDIS_HOST
+          value: "discourse-redis-ha-haproxy.central-ci.svc.cluster.local"
+        - name: DISCOURSE_REDIS_PORT
+          value: "6379"
+        - name: DISCOURSE_DB_SOCKET
+          value: ''
+        - name: DISCOURSE_DB_PORT
+          value: '5432'
+        - name: DISCOURSE_DB_NAME
+          value: 'discourse'
+        - name: DISCOURSE_DB_PASSWORD
+          value: 'postgres'
+        - name: DISCOURSE_DB_USERNAME
+          value: 'postgres'
+        - name: DISCOURSE_DB_HOST
+          value: "discourse-postgresql-ha-pgpool.central-ci.svc.cluster.local"
+        - name: DISCOURSE_HOSTNAME
+          value: "discourse.apps.ocp.prod.psi.redhat.com"
+        - name: DISCOURSE_SMTP_ADDRESS
+          value: "smtp.example.com"
+        volumeMounts:
+          - mountPath: "/var/www/discourse"
+            name: discourse
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+      volumes:
+        - name: discourse
+#          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: discourse
+        - name: scripts
+          configMap:
+            name: discourse

@@ -6,18 +6,8 @@ do
 key="$1"
 
 case $key in
-    -f|--from)
-    FROM="$2"
-    shift
-    shift
-    ;;
-    -t|--to)
-    TO="$2"
-    shift
-    shift
-    ;;
     -u|--username)
-    exprot USERNAME="$2"
+    export USERNAME="$2"
     shift
     shift
     ;;
@@ -34,22 +24,29 @@ esac
 done
 set -- "${POSITIONAL[@]}"
 
-rsync \
-  -auv \
-  --delete \
-  --ignore-errors \
-  --no-i-r \
-  --omit-dir-times \
-  --no-perms \
-  --exclude "**/*.tar.gz" \
-  --exclude "**/.travis.yml" \
-  $FROM $TO
+until $(bundle exec rake db:create)
+do
+  echo "Try again"
+  sleep 5
+done
 
-pushd $FROM
-bundle exec rake db:create
-bundle exec rake db:migrate
+until $(bundle exec rake db:migrate)
+do
+  echo "Try again"
+  sleep 5
+done
 
-ADMIN=$(expect <'EOF'
+until [ ! -f assets.lock ]
+do
+  echo "Other node compiles assets, waiting"
+  sleep 5
+done
+
+touch assets.lock
+bundle exec rake assets:precompile
+rm -rf  assets.lock
+
+ADMIN=$(expect <<'EOF'
   spawn bundle exec rake admin:create
 
   expect "Email:  "
@@ -72,4 +69,3 @@ EOF
 )
 
 echo "$ADMIN"
-popd

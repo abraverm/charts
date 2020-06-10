@@ -3,7 +3,12 @@ apiVersion: route.openshift.io/v1
 metadata:
   name: discourse
 spec:
-  host: 
+  host: discourse.apps.ocp.prod.psi.redhat.com
   to:
     kind: Service
     name: discourse
+  port:
+    targetPort: https
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
